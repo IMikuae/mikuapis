@@ -1,29 +1,44 @@
-var express = require("express"),
-	cors = require("cors"),
-	secure = require("ssl-express-www");
-const PORT = process.env.PORT || 8080 || 5000 || 3000;
-var { color } = require("./lib/color.js");
+const express = require("express");
+const cors = require("cors");
+const secure = require("ssl-express-www");
+const path = require("path");
 
-var apirouter = require("./routes/api");
+const PORT = process.env.PORT || 3000;
 
-var app = express();
+const apirouter = require("./routes/api");
+
+const app = express();
 app.enable("trust proxy");
 app.set("json spaces", 2);
 app.use(cors());
 app.use(secure);
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 
+// Route for the home page
 app.get("/", (req, res) => {
-	res.sendFile(__path + "/views/home.html");
+    res.sendFile(path.join(__dirname, "views", "index.html")); // Serve index.html for root route
 });
+
+// Route for documentation
 app.get("/docs", (req, res) => {
-	res.sendFile(__path + "/views/index.html");
+    res.sendFile(path.join(__dirname, "views", "index.html")); // Serve index.html for /docs route
 });
 
 app.use("/api", apirouter);
 
+// Error handling for unknown routes
+app.use((req, res, next) => {
+    res.status(404).json({ error: "Not Found" });
+});
+
+// Error handling for other errors
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ error: "Internal Server Error" });
+});
+
 app.listen(PORT, () => {
-	console.log(color("Server running on port " + PORT, "green"));
+    console.log("Server running on port " + PORT);
 });
 
 module.exports = app;
